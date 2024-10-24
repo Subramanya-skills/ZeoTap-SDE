@@ -1,0 +1,151 @@
+Application 1: Rule Engine with AST
+1. Data Structure
+class Node:
+    def __init__(self, type, value=None, left=None, right=None):
+        self.type = type 
+        self.value = value 
+        self.left = left
+        self.right = right
+
+2. Data Storage
+CREATE TABLE rules (
+    rule_id SERIAL PRIMARY KEY,
+    rule_string TEXT,
+    ast JSONB
+);
+rule_string will store the human-readable rule (e.g., "age > 30 AND department = 'Sales'"), and ast will store the parsed AST structure in JSON format.
+
+API Design
+create_rule(rule_string): This function parses the rule string and constructs an AST (returns the root Node object).
+
+combine_rules(rules): This function takes multiple rule strings, parses each into an AST, and merges them by applying optimizations (e.g., eliminating redundant checks). The result is a single combined AST.
+
+evaluate_rule(JSON data): This function evaluates the AST based on the input dictionary data. It traverses the AST and evaluates each node to return True/False.
+
+create_rule:
+import ast
+
+def create_rule(rule_string):
+    parsed_ast = ast.parse(rule_string, mode='eval')
+    return convert_ast_to_node(parsed_ast.body)
+
+def convert_ast_to_node(node):
+    if isinstance(node, ast.BoolOp):
+        # Handle AND/OR operations
+        return Node(type='operator', value=node.op.__class__.__name__,
+                    left=convert_ast_to_node(node.values[0]),
+                    right=convert_ast_to_node(node.values[1]))
+    elif isinstance(node, ast.Compare):
+        # Handle comparisons
+        return Node(type='operand', value=ast.dump(node))
+
+        Test Cases
+Test 1: Create rules like "age > 30 AND department = 'Sales'" and verify the AST.
+Test 2: Combine rules and verify the resulting AST.
+Test 3: Evaluate the rules against sample data (like {"age": 35, "department": "Sales"}).
+
+
+Here’s how you can approach both assignments:
+
+Application 1: Rule Engine with AST
+1. Data Structure
+You can represent the AST using a Node class:
+
+python
+Copy code
+class Node:
+    def __init__(self, type, value=None, left=None, right=None):
+        self.type = type  
+        self.value = value 
+        self.left = left  
+        self.right = right  
+2. Data Storage
+You can use a relational database like PostgreSQL to store the rules. A sample schema might look like:
+
+sql
+Copy code
+CREATE TABLE rules (
+    rule_id SERIAL PRIMARY KEY,
+    rule_string TEXT,
+    ast JSONB
+);
+Here, rule_string will store the human-readable rule (e.g., "age > 30 AND department = 'Sales'"), and ast will store the parsed AST structure in JSON format.
+
+3. API Design
+create_rule(rule_string): This function parses the rule string and constructs an AST (returns the root Node object).
+
+combine_rules(rules): This function takes multiple rule strings, parses each into an AST, and merges them by applying optimizations (e.g., eliminating redundant checks). The result is a single combined AST.
+
+evaluate_rule(JSON data): This function evaluates the AST based on the input dictionary data. It traverses the AST and evaluates each node to return True/False.
+
+Sample code for create_rule:
+python
+Copy code
+import ast
+
+def create_rule(rule_string):
+    parsed_ast = ast.parse(rule_string, mode='eval')
+    return convert_ast_to_node(parsed_ast.body)
+
+def convert_ast_to_node(node):
+    if isinstance(node, ast.BoolOp):
+        # Handle AND/OR operations
+        return Node(type='operator', value=node.op.__class__.__name__,
+                    left=convert_ast_to_node(node.values[0]),
+                    right=convert_ast_to_node(node.values[1]))
+    elif isinstance(node, ast.Compare):
+        # Handle comparisons
+        return Node(type='operand', value=ast.dump(node))
+4. Test Cases
+Test 1: Create rules like "age > 30 AND department = 'Sales'" and verify the AST.
+Test 2: Combine rules and verify the resulting AST.
+Test 3: Evaluate the rules against sample data (like {"age": 35, "department": "Sales"}).
+
+
+Application 2: Real-Time Data Processing System for Weather Monitoring
+1. Data Structure and Processing
+You’ll need to retrieve weather data from the OpenWeatherMap API and store it for later aggregation. For data storage, you can use PostgreSQL or MongoDB.
+
+Code
+CREATE TABLE weather_data (
+    city_name VARCHAR(50),
+    timestamp TIMESTAMP,
+    temp_celsius FLOAT,
+    feels_like_celsius FLOAT,
+    main_condition VARCHAR(50)
+);
+
+Rollups and Aggregates
+Daily Weather Summary:
+
+For each city, roll up the weather data daily.
+Calculate aggregates like average, max, min temperatures, and dominant weather condition. You can use SQL queries for aggregation.
+SELECT city_name, 
+       AVG(temp_celsius) AS avg_temp, 
+       MAX(temp_celsius) AS max_temp, 
+       MIN(temp_celsius) AS min_temp, 
+       mode() WITHIN GROUP (ORDER BY main_condition) AS dominant_condition
+FROM weather_data
+WHERE DATE(timestamp) = CURRENT_DATE
+GROUP BY city_name;
+
+Alerting System:
+
+Define thresholds (e.g., temp > 35). If conditions breach the thresholds, trigger alerts. For example, sending email notifications or logging to a file.
+
+. API Design
+Retrieve Weather Data: Call the API at configurable intervals, parse the data, and store it.
+
+Aggregate Data: Periodically compute the daily summaries (e.g., using a scheduled job).
+
+Alerts: Continuously check if the latest data exceeds thresholds and trigger an alert.
+
+4. Test Cases
+System Setup: Verify the API connection with OpenWeatherMap.
+Data Retrieval: Simulate API calls and test if data is correctly retrieved and stored.
+Temperature Conversion: Ensure that the conversion from Kelvin to Celsius/Fahrenheit works.
+Daily Summary: Test rollups and aggregation.
+Alerts: Simulate data that exceeds thresholds and verify alerts.
+Bonus
+Add support for additional weather parameters (e.g., humidity).
+Implement visualizations using tools like Matplotlib or Plotly to show trends in weather data.
